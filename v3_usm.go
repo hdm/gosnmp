@@ -167,6 +167,7 @@ type UsmSecurityParameters struct {
 
 	AcceptInauthentic bool
 	Inauthentic       bool
+	InauthenticReason string
 
 	Logger Logger
 }
@@ -811,25 +812,32 @@ func (sp *UsmSecurityParameters) isAuthentic(packetBytes []byte, packet *SnmpPac
 
 	// Verify the username
 	if packetSecParams.UserName != sp.UserName {
+		if sp.AcceptInauthentic {
+			sp.Inauthentic = true
+			sp.InauthenticReason = "username mismatch"
+			return true, nil
+		}
 		return false, nil
 	}
 
 	// TODO: investigate call chain to determine if this is really the best spot for this
 	if msgDigest, err = calcPacketDigest(packetBytes, packetSecParams); err != nil {
-		return false, err
+		if sp.AcceptInauthentic {
+			sp.Inauthentic = true
+			sp.InauthenticReason = "error calculating message digest: " + err.Error()
+			return true, nil
+		}
 	}
 
 	// Check the message signature against the computed digest
 	signature := []byte(packetSecParams.AuthenticationParameters)
 	valid := subtle.ConstantTimeCompare(msgDigest, signature) == 1
-	if valid {
-		return true, nil
-	}
-	if sp.AcceptInauthentic {
+	if !valid && sp.AcceptInauthentic {
 		sp.Inauthentic = true
+		sp.InauthenticReason = "message digest is wrong"
 		return true, nil
 	}
-	return false, nil
+	return valid, nil
 }
 
 func (sp *UsmSecurityParameters) encryptPacket(scopedPdu []byte) ([]byte, error) {

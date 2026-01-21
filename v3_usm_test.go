@@ -93,6 +93,48 @@ func TestIsAuthenticWrongUsername(t *testing.T) {
 	require.False(t, authentic, "Packet was considered to be authentic")
 }
 
+func TestIsInauthenticWrongUsername(t *testing.T) {
+	var err error
+
+	sp := UsmSecurityParameters{
+		localAESSalt:             0,
+		localDESSalt:             0,
+		AuthoritativeEngineBoots: 43,
+		AuthoritativeEngineID:    authorativeEngineID(t),
+		AuthoritativeEngineTime:  2113189,
+		UserName:                 "usr-sha224-none",
+		AuthenticationParameters: packetSHA224AuthenticationParams(t),
+		PrivacyParameters:        nil,
+		AuthenticationProtocol:   SHA224,
+		PrivacyProtocol:          0,
+		AuthenticationPassphrase: "authkey1",
+		PrivacyPassphrase:        "",
+		SecretKey:                nil,
+		PrivacyKey:               nil,
+		Logger:                   NewLogger(log.New(io.Discard, "", 0)),
+	}
+
+	sp.SecretKey, err = genlocalkey(sp.AuthenticationProtocol,
+		sp.AuthenticationPassphrase,
+		sp.AuthoritativeEngineID)
+
+	require.NoError(t, err, "Generation of key failed")
+	require.Equal(t, correctKeySHA224(t), sp.SecretKey, "Wrong key generated")
+
+	srcPacket := packetSHA224NoAuthentication(t)
+
+	snmpPacket := SnmpPacket{
+		SecurityParameters: sp.Copy(),
+	}
+	snmpPacket.SecurityParameters.(*UsmSecurityParameters).UserName = "foo"
+	sp.AcceptInauthentic = true
+
+	authentic, err := sp.isAuthentic(srcPacket, &snmpPacket)
+	require.NoError(t, err, "Authentication check of key failed")
+	require.True(t, authentic, "Packet was considered to be authentic")
+	require.Equal(t, sp.InauthenticReason, "username mismatch")
+}
+
 func TestAuthenticationSHA224(t *testing.T) {
 	var err error
 
@@ -267,25 +309,4 @@ func TestIsAuthenticSHA512(t *testing.T) {
 	authentic, err := sp.isAuthentic(srcPacket, &snmpPacket)
 	require.NoError(t, err, "Authentication check of key failed")
 	require.True(t, authentic, "Packet was not considered to be authentic")
-}
-
-func BenchmarkSingleHash(b *testing.B) {
-	SetPwdCache()
-
-	engineID, _ := hex.DecodeString("80004fb805636c6f75644dab22cc")
-
-	for i := MD5; i < SHA512; i++ {
-		b.Run(b.Name()+i.String(), func(b *testing.B) {
-			for n := 0; n < b.N; n++ {
-				_, err := genlocalkey(i, "authkey1", string(engineID))
-				if err != nil {
-					b.Fatal(err)
-				}
-			}
-		})
-	}
-
-	passwordKeyHashMutex.RLock()
-	b.Logf("cache size %d", len(passwordKeyHashCache))
-	passwordKeyHashMutex.RUnlock()
 }

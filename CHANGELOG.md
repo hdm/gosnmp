@@ -5,6 +5,11 @@
 * [ENHANCEMENT]
 * [BUGFIX]
 
+# v1.X.0
+
+* [ENHANCEMENT] USM now accepts AllowInauthentic to accept invalid signatures on responses
+
+
 ## v1.38.0
 
 * [CHANGE] Refactor netsnmp playback function to use an io.Reader #459

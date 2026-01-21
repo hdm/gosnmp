@@ -918,7 +918,7 @@ func TestUnmarshal(t *testing.T) {
 
 /*
 panicUnmarshalHeader tests a boundary condition that results in a panic
-when unmarshalling the SNMP header (see also https://github.com/gosnmp/gosnmp/issues/440)
+when unmarshalling the SNMP header (see also https://github.com/runZeroInc/gosnmp/issues/440)
 */
 func panicUnmarshalHeader() []byte {
 	return []byte("0\x04\x02\x020\x03")
@@ -1061,7 +1061,7 @@ func panicUnmarshalDecryptNoPriv() []byte {
 /*
 panicUnmarshalV3Overflow tests a boundary condition that caused a panic
 due to cursor index out of range (negative cursor from overflow) in SNMPv3
-(see also https://github.com/gosnmp/gosnmp/issues/552).
+(see also https://github.com/runZeroInc/gosnmp/issues/552).
 */
 func panicUnmarshalV3Overflow() []byte {
 	return []byte{

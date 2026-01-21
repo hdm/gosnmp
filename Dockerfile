@@ -26,7 +26,7 @@ RUN chmod -R a+rw /etc/snmp /var/lib/net-snmp/
 
 # Copy local branch into container
 USER gosnmp
-WORKDIR /go/src/github.com/gosnmp/gosnmp
+WORKDIR /go/src/github.com/runZeroInc/gosnmp
 COPY --chown=gosnmp . .
 
 RUN make lint
@@ -39,4 +39,4 @@ ENV GOSNMP_TARGET_IPV6='::1'
 ENV GOSNMP_PORT_IPV6=1024
 ENV GOSNMP_SNMPD=true
 
-ENTRYPOINT ["/go/src/github.com/gosnmp/gosnmp/build_tests.sh"]
+ENTRYPOINT ["/go/src/github.com/runZeroInc/gosnmp/build_tests.sh"]

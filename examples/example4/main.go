@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	g "github.com/gosnmp/gosnmp"
+	g "github.com/runZeroInc/gosnmp"
 )
 
 const (

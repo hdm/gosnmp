@@ -8,10 +8,14 @@ package gosnmp
 
 import (
 	"encoding/base64"
+<<<<<<< HEAD
 	"io"
 	"log"
 	"reflect"
 	"strings"
+=======
+	"reflect"
+>>>>>>> e91447a (Update Go (#536))
 	"testing"
 
 	"github.com/stretchr/testify/assert"

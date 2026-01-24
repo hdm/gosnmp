@@ -11,7 +11,12 @@ linters:
     - goprintffuncname
     - gosec
     - misspell
+<<<<<<< HEAD
     - modernize
+=======
+    # Makes gosec unhappy: https://github.com/golangci/golangci-lint/issues/6237#issuecomment-3616620033
+    # - modernize
+>>>>>>> e91447a (Update Go (#536))
     - nakedret
     - nolintlint
     - revive

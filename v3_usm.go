@@ -1054,7 +1054,7 @@ func (sp *UsmSecurityParameters) unmarshal(flags SnmpV3MsgFlags, packet []byte, 
 	}
 	cursor += count
 	if AuthoritativeEngineBoots, ok := rawMsgAuthoritativeEngineBoots.(int); ok {
-		sp.AuthoritativeEngineBoots = uint32(AuthoritativeEngineBoots) // nolint:gosec
+		sp.AuthoritativeEngineBoots = uint32(AuthoritativeEngineBoots) //nolint:gosec
 		sp.Logger.Printf("Parsed authoritativeEngineBoots %d", AuthoritativeEngineBoots)
 	}
 
@@ -1064,7 +1064,7 @@ func (sp *UsmSecurityParameters) unmarshal(flags SnmpV3MsgFlags, packet []byte, 
 	}
 	cursor += count
 	if AuthoritativeEngineTime, ok := rawMsgAuthoritativeEngineTime.(int); ok {
-		sp.AuthoritativeEngineTime = uint32(AuthoritativeEngineTime) // nolint:gosec
+		sp.AuthoritativeEngineTime = uint32(AuthoritativeEngineTime) //nolint:gosec
 		sp.Logger.Printf("Parsed authoritativeEngineTime %d", AuthoritativeEngineTime)
 	}
 

@@ -17,10 +17,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Tests in alphabetical order of function being tested
@@ -149,8 +151,11 @@ var testsEnmarshal = []testsEnmarshalT{
 		0x1c, // vbl start
 		0x32, // finish
 		[]testsEnmarshalVarbindPosition{
-			{".1.3.6.1.4.1.2863.205.1.1.75.1.0",
-				0x1e, 0x32, OctetString, []byte{0x80}},
+			{
+				".1.3.6.1.4.1.2863.205.1.1.75.1.0",
+				0x1e, 0x32, OctetString,
+				[]byte{0x80},
+			},
 		},
 	},
 	{
@@ -165,8 +170,10 @@ var testsEnmarshal = []testsEnmarshalT{
 		0x1c, // vbl start
 		0x37, // finish
 		[]testsEnmarshalVarbindPosition{
-			{".1.3.6.1.4.1.2863.205.1.1.75.2.0",
-				0x1e, 0x36, OctetString, []byte("telnet")},
+			{
+				".1.3.6.1.4.1.2863.205.1.1.75.2.0",
+				0x1e, 0x36, OctetString, []byte("telnet"),
+			},
 		},
 	},
 	// MrSpock Set stuff
@@ -242,8 +249,8 @@ func vbPosPdus(test testsEnmarshalT) (pdus []SnmpPDU) {
 
 // checkByteEquality walks the bytes in testBytes, and compares them to goodBytes
 func checkByteEquality(t *testing.T, test testsEnmarshalT, testBytes []byte,
-	start int, finish int) {
-
+	start int, finish int,
+) {
 	testBytesLen := len(testBytes)
 
 	goodBytes := test.goodBytes()
@@ -405,7 +412,8 @@ var testsUnmarshal = []struct {
 	in  func() []byte
 	out *SnmpPacket
 }{
-	{kyoceraResponseBytes,
+	{
+		kyoceraResponseBytes,
 		&SnmpPacket{
 			Version:    Version2c,
 			Community:  "public",
@@ -457,7 +465,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{ciscoResponseBytes,
+	{
+		ciscoResponseBytes,
 		&SnmpPacket{
 			Version:    Version2c,
 			Community:  "public",
@@ -519,7 +528,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{portOnIncoming1,
+	{
+		portOnIncoming1,
 		&SnmpPacket{
 			Version:    Version1,
 			Community:  "privatelab",
@@ -536,7 +546,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{portOffIncoming1,
+	{
+		portOffIncoming1,
 		&SnmpPacket{
 			Version:    Version1,
 			Community:  "privatelab",
@@ -553,7 +564,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{ciscoGetnextResponseBytes,
+	{
+		ciscoGetnextResponseBytes,
 		&SnmpPacket{
 			Version:    Version2c,
 			Community:  "public",
@@ -595,7 +607,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{ciscoGetbulkResponseBytes,
+	{
+		ciscoGetbulkResponseBytes,
 		&SnmpPacket{
 			Version:        Version2c,
 			Community:      "public",
@@ -657,7 +670,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{emptyErrResponse,
+	{
+		emptyErrResponse,
 		&SnmpPacket{
 			Version:   Version2c,
 			Community: "public",
@@ -667,7 +681,8 @@ var testsUnmarshal = []struct {
 			Variables: []SnmpPDU{},
 		},
 	},
-	{counter64Response,
+	{
+		counter64Response,
 		&SnmpPacket{
 			Version:    Version2c,
 			Community:  "public",
@@ -684,7 +699,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{opaqueFloatResponse,
+	{
+		opaqueFloatResponse,
 		&SnmpPacket{
 			Version:    Version2c,
 			Community:  "public",
@@ -701,7 +717,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{opaqueResponse,
+	{
+		opaqueResponse,
 		&SnmpPacket{
 			Version:    Version1,
 			Community:  "public",
@@ -718,7 +735,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{opaqueDoubleResponse,
+	{
+		opaqueDoubleResponse,
 		&SnmpPacket{
 			Version:    Version2c,
 			Community:  "public",
@@ -735,7 +753,8 @@ var testsUnmarshal = []struct {
 			},
 		},
 	},
-	{snmpv3HelloRequest,
+	{
+		snmpv3HelloRequest,
 		&SnmpPacket{
 			Version:    Version3,
 			PDUType:    GetRequest,
@@ -746,7 +765,8 @@ var testsUnmarshal = []struct {
 			Variables:  []SnmpPDU{},
 		},
 	},
-	{snmpv3HelloResponse,
+	{
+		snmpv3HelloResponse,
 		&SnmpPacket{
 			Version:    Version3,
 			PDUType:    Report,
@@ -899,7 +919,6 @@ func TestUnmarshal(t *testing.T) {
 					t.Fatalf("#%s: SnmpDecodePacket() err returned: %v", funcName, err)
 				}
 				assert.EqualValues(t, res, resNew)
-
 			})
 		})
 
@@ -1617,8 +1636,8 @@ func opaqueDoubleResponse() []byte {
 }
 
 func TestUnmarshalEmptyPanic(t *testing.T) {
-	var in = []byte{}
-	var res = new(SnmpPacket)
+	in := []byte{}
+	res := new(SnmpPacket)
 
 	_, err := Default.unmarshalHeader(in, res)
 	if err == nil {
@@ -1650,7 +1669,6 @@ func TestV3USMInitialPacket(t *testing.T) {
 		t.Logf("-->got=%v", pktNew)
 		t.Errorf("#TestV3USMInitialPacket: SnmpDecodePacket() err returned: %v. ", errDecode)
 	}
-
 }
 
 func TestSendOneRequest_dups(t *testing.T) {
@@ -1973,7 +1991,8 @@ func trap1() []byte {
 		0x75, 0x6d, 0x70, 0x63, 0x61, 0x70, 0x02, 0x00, 0x08, 0x00, 0x74, 0x3a, 0x05, 0x00, 0xdf, 0xba,
 		0x27, 0x0c, 0x03, 0x00, 0x08, 0x00, 0x74, 0x3a, 0x05, 0x00, 0x18, 0x94, 0x67, 0x0c, 0x04, 0x00,
 		0x08, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x08, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00}
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+	}
 }
 
 // Simple Network Management Protocol
@@ -1993,7 +2012,8 @@ func trap1() []byte {
 //         plaintext
 
 func snmpv3HelloRequest() []byte {
-	return []byte{0x30, 0x52, 0x02, 0x01, 0x03, 0x30, 0x11, 0x02,
+	return []byte{
+		0x30, 0x52, 0x02, 0x01, 0x03, 0x30, 0x11, 0x02,
 		0x04, 0x05, 0x6d, 0x2b, 0x82, 0x02, 0x03, 0x00,
 		0xff, 0xe3, 0x04, 0x01, 0x04, 0x02, 0x01, 0x03,
 		0x04, 0x10, 0x30, 0x0e, 0x04, 0x00, 0x02, 0x01,
@@ -2003,7 +2023,8 @@ func snmpv3HelloRequest() []byte {
 		0x6f, 0x72, 0x6d, 0x61, 0x74, 0x73, 0x2f, 0x6c,
 		0x69, 0x6e, 0x75, 0x78, 0xa0, 0x0e, 0x02, 0x04,
 		0x44, 0xfa, 0x16, 0xe1, 0x02, 0x01, 0x00, 0x02,
-		0x01, 0x00, 0x30, 0x00}
+		0x01, 0x00, 0x30, 0x00,
+	}
 }
 
 // msgData: plaintext (0)
@@ -2056,7 +2077,7 @@ func dumpBytes1(data []byte, msg string, maxlength int) {
 	if len(data) < maxlength {
 		length = len(data)
 	}
-	length *= 2 //One Byte Symbols Two Hex
+	length *= 2 // One Byte Symbols Two Hex
 	hexStr := hex.EncodeToString(data)
 	for i := 0; length >= i+16; i += 16 {
 		buffer.WriteString("\n")
@@ -2275,4 +2296,209 @@ func TestMarshalTLV(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSNMPv3_UpdatesEngineTimeOnReport(t *testing.T) {
+	t.Helper()
+
+	// --- Test fixtures -------------------------------------------------------
+	// These are the specific engine times observed in the real UniFi capture.
+	// The client initially believes engineTime=207512 (stale) while the agent
+	// reports 1094073 as the authoritative time through a REPORT PDU.
+	const (
+		engineTimeOld = uint32(207512)  // stale time sent by the client first
+		engineTimeNew = uint32(1094073) // authoritative time from the agent REPORT
+	)
+
+	// Wireshark Frame 2 (UDP payload = SNMP BER message).
+	// This is a REPORT with msgFlags=NoAuthNoPriv and carries the agent’s
+	// authoritative engineBoots/engineTime in the USM header. We inject this
+	// as the server’s first reply to trigger client resync.
+	deviceReportFrame2 := mustHex(
+		"306d020103301002040c6e214f020205c004010002010304243022040d80001f88801cae0f4e0000001d020101020310b1b9040561646d696e040004003030040d80001f88801cae0f4e0000001d0400a81d02010002010002010030123010060a2b060106030f0101020041021e5d",
+	)
+
+	// Start a mock UDP “device” that:
+	//   1) captures the client's first datagram (should contain engineTimeOld),
+	//   2) replies with the REPORT (above),
+	//   3) captures the client's immediate retry (should contain engineTimeNew).
+	ap := startMockUniFiAP(t, deviceReportFrame2)
+
+	// --- Client setup --------------------------------------------------------
+	// Configure gosnmp to talk to the mock "device" with a stale engineTime.
+	// Retries=0 ensures we’re testing the *inline* REPORT-driven resend (your fix),
+	// not outer retry logic. AuthNoPriv to match the production setup.
+	g := &GoSNMP{
+		Target:        func() string { ip, _ := ap.Addr(); return ip }(),
+		Port:          func() uint16 { _, p := ap.Addr(); return p }(),
+		Transport:     "udp",
+		Version:       Version3,
+		Timeout:       1500 * time.Millisecond, // enough for the two packet round-trip in test
+		Retries:       0,                       // force the inline resend path
+		MsgFlags:      AuthNoPriv,
+		SecurityModel: UserSecurityModel,
+		SecurityParameters: &UsmSecurityParameters{
+			UserName:                 "admin",
+			AuthenticationProtocol:   SHA,
+			AuthenticationPassphrase: "pass",
+			AuthoritativeEngineID:    "80001f8880092003c168aefabc",
+			AuthoritativeEngineBoots: 1,
+			AuthoritativeEngineTime:  engineTimeOld, // seed with stale time
+		},
+	}
+	require.NoError(t, g.Connect(), "Connect")
+	t.Cleanup(func() { _ = g.Conn.Close() })
+
+	// --- Exercise ------------------------------------------------------------
+	// Any v3 request works; we use sysUpTime.0. The mock replies with a REPORT
+	// (NoAuthNoPriv). The client must:
+	//   - skip auth check for that REPORT,
+	//   - parse/adopt authoritative engineBoots/engineTime from its header,
+	//   - immediately resend the *same* request with the corrected time.
+	_, _ = g.Get([]string{"1.3.6.1.2.1.1.3.0"})
+
+	// Give the mock time to receive the client’s *second* write (the inline resend).
+	ap.WaitSecond(2 * time.Second)
+
+	// --- Verify: first write had OLD time -----------------------------------
+	firstWrite := ap.FirstWrite()
+	require.NotEmpty(t, firstWrite, "expected at least 1 client write (initial request)")
+	oldBER := berInt(engineTimeOld) // BER-encoded INTEGER for engineTimeOld
+	require.Truef(t, bytes.Contains(firstWrite, oldBER),
+		"first client write should contain old engineTime %d (BER %x)\nfirst write (hex):\n%s",
+		engineTimeOld, oldBER, hex.Dump(firstWrite))
+
+	// --- Verify: second write exists and has NEW time -----------------------
+	// This proves the inline REPORT handling kicked in and the engine time was updated
+	// *within the same attempt* (no outer retry consumption).
+	secondWrite := ap.SecondWrite()
+	require.NotEmptyf(t, secondWrite,
+		"expected a second client write (inline retry after REPORT), but got only one write\nfirst write (hex):\n%s",
+		hex.Dump(firstWrite))
+
+	newBER := berInt(engineTimeNew) // BER-encoded INTEGER for engineTimeNew
+	assert.Truef(t, bytes.Contains(secondWrite, newBER),
+		"second client write did not update engineTime to %d (BER %x)\nsecond write (hex):\n%s",
+		engineTimeNew, newBER, hex.Dump(secondWrite))
+
+	// Sanity: ensure the old value is *not* still present in the resend.
+	assert.Falsef(t, bytes.Contains(secondWrite, oldBER),
+		"second client write should not still contain old engineTime %d (BER %x)\nsecond write (hex):\n%s",
+		engineTimeOld, oldBER, hex.Dump(secondWrite))
+
+	// --- Verify: session USM state updated ----------------------------------
+	// After processing the REPORT, the client's USM should keep the authoritative
+	// engineTime so future requests are in-window.
+	if usp, ok := g.SecurityParameters.(*UsmSecurityParameters); assert.True(t, ok, "expected UsmSecurityParameters") {
+		assert.Equal(t, engineTimeNew, usp.AuthoritativeEngineTime,
+			"client USM should adopt authoritative engineTime from REPORT")
+	}
+}
+
+// mockUniFiAP simulates a UniFi AP that replies with a v3 REPORT (NoAuthNoPriv)
+// carrying authoritative engine params, then waits for the client’s immediate retry.
+type mockUniFiAP struct {
+	t      *testing.T
+	conn   *net.UDPConn
+	addr   *net.UDPAddr
+	report []byte
+
+	mu          sync.Mutex
+	firstWrite  []byte
+	secondWrite []byte
+	gotSecond   chan struct{}
+}
+
+func startMockUniFiAP(t *testing.T, report []byte) *mockUniFiAP {
+	t.Helper()
+	c, err := net.ListenUDP("udp4", &net.UDPAddr{})
+	require.NoError(t, err, "listen udp")
+
+	m := &mockUniFiAP{
+		t:         t,
+		conn:      c,
+		addr:      c.LocalAddr().(*net.UDPAddr),
+		report:    append([]byte(nil), report...),
+		gotSecond: make(chan struct{}, 1),
+	}
+
+	// single exchange goroutine
+	go m.runOnce()
+	t.Cleanup(func() { _ = m.conn.Close() })
+	return m
+}
+
+func (m *mockUniFiAP) runOnce() {
+	buf := make([]byte, 8192)
+
+	// 1st datagram from client
+	_ = m.conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	n, clientAddr, err := m.conn.ReadFromUDP(buf)
+	if err != nil {
+		return
+	}
+	m.mu.Lock()
+	m.firstWrite = append([]byte{}, buf[:n]...)
+	m.mu.Unlock()
+
+	// Send REPORT (authoritative engineTime)
+	_, _ = m.conn.WriteToUDP(m.report, clientAddr)
+
+	// 2nd datagram from client (immediate retry)
+	_ = m.conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	n2, _, err2 := m.conn.ReadFromUDP(buf)
+	if err2 == nil {
+		m.mu.Lock()
+		m.secondWrite = append([]byte{}, buf[:n2]...)
+		m.mu.Unlock()
+		m.gotSecond <- struct{}{}
+	}
+}
+
+func (m *mockUniFiAP) Addr() (ip string, port uint16) {
+	return m.addr.IP.String(), uint16(m.addr.Port)
+}
+
+func (m *mockUniFiAP) WaitSecond(d time.Duration) {
+	select {
+	case <-m.gotSecond:
+	case <-time.After(d):
+	}
+}
+
+func (m *mockUniFiAP) FirstWrite() []byte {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]byte{}, m.firstWrite...)
+}
+
+func (m *mockUniFiAP) SecondWrite() []byte {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]byte{}, m.secondWrite...)
+}
+
+// BER INTEGER for positive ints: 0x02 <len> <big-endian>
+func berInt(v uint32) []byte {
+	if v == 0 {
+		return []byte{0x02, 0x01, 0x00}
+	}
+	b := []byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
+	i := 0
+	for i < len(b)-1 && b[i] == 0x00 {
+		i++
+	}
+	be := b[i:]
+	if be[0]&0x80 != 0 {
+		be = append([]byte{0x00}, be...)
+	}
+	return append([]byte{0x02, byte(len(be))}, be...)
+}
+
+func mustHex(s string) []byte {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }

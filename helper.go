@@ -90,7 +90,7 @@ func (x *GoSNMP) decodeValue(data []byte, retVal *variable) error {
 		retVal.Type = Asn1BER(data[0])
 		switch Asn1BER(data[0]) {
 		case Uinteger32:
-			retVal.Value = uint32(ret)
+			retVal.Value = uint32(ret) // nolint:gosec
 		default:
 			retVal.Value = ret
 		}
@@ -315,7 +315,7 @@ func marshalInt32(value int) ([]byte, error) {
 	//  b) shall not all be zero
 	// These rules ensure that an integer value is always encoded in the smallest
 	// possible number of octets.
-	val := uint32(value)
+	val := uint32(value) // nolint:gosec
 	switch {
 	case val&mask1 == 0 || val&mask1 == mask1:
 		return []byte{byte(val)}, nil
@@ -362,7 +362,7 @@ func marshalUint32(v any) ([]byte, error) {
 	case uint32:
 		source = val
 	case uint:
-		source = uint32(val)
+		source = uint32(val) // nolint:gosec
 	case uint8:
 		source = uint32(val)
 	case SNMPError:
@@ -444,19 +444,6 @@ func marshalLength(length int) ([]byte, error) {
 	result[0] = byte(128 | numBytes)
 	copy(result[1:], buf[start:])
 	return result, nil
-}
-
-// marshalTLV writes a BER TLV (type-length-value) to buf using proper length
-// encoding. Handles values of any size, including those exceeding 127 bytes.
-func marshalTLV(buf *bytes.Buffer, tag byte, value []byte) error {
-	length, err := marshalLength(len(value))
-	if err != nil {
-		return err
-	}
-	buf.WriteByte(tag)
-	buf.Write(length)
-	buf.Write(value)
-	return nil
 }
 
 // marshalTLV writes a BER TLV (type-length-value) to buf using proper length
@@ -624,8 +611,8 @@ func parseInt64(bytes []byte) (int64, error) {
 		ret |= int64(bytes[bytesRead])
 	}
 	// Shift up and down in order to sign extend the result.
-	ret <<= 64 - uint8(len(bytes))*8
-	ret >>= 64 - uint8(len(bytes))*8
+	ret <<= 64 - uint8(len(bytes))*8 // nolint:gosec
+	ret >>= 64 - uint8(len(bytes))*8 // nolint:gosec
 	return ret, nil
 }
 
@@ -844,7 +831,7 @@ func parseUint(bytes []byte) (uint, error) {
 	if ret64 != uint64(uint(ret64)) {
 		return 0, ErrIntegerTooLarge
 	}
-	return uint(ret64), nil
+	return uint(ret64), nil // nolint:gosec
 }
 
 func parseFloat32(bytes []byte) (float32, error) {
@@ -888,14 +875,14 @@ func (b BitStringValue) At(i int) int {
 		return 0
 	}
 	x := i / 8
-	y := 7 - uint(i%8)
+	y := 7 - uint(i%8) // nolint:gosec
 	return int(b.Bytes[x]>>y) & 1
 }
 
 // RightAlign returns a slice where the padding bits are at the beginning. The
 // slice may share memory with the BitString.
 func (b BitStringValue) RightAlign() []byte {
-	shift := uint(8 - (b.BitLength % 8))
+	shift := uint(8 - (b.BitLength % 8)) // nolint:gosec
 	if shift == 8 || len(b.Bytes) == 0 {
 		return b.Bytes
 	}

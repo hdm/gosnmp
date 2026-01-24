@@ -184,7 +184,8 @@ func (packet *SnmpPacket) SafeString() string {
 // GoSNMP
 // send/receive one snmp request
 func (x *GoSNMP) sendOneRequest(packetOut *SnmpPacket,
-	wait bool) (result *SnmpPacket, err error) {
+	wait bool,
+) (result *SnmpPacket, err error) {
 	allReqIDs := make([]uint32, 0, x.Retries+1)
 	// allMsgIDs := make([]uint32, 0, x.Retries+1) // unused
 
@@ -474,7 +475,7 @@ sendRetry:
 func (x *GoSNMP) send(packetOut *SnmpPacket, wait bool) (result *SnmpPacket, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			var buf = make([]byte, 8192)
+			buf := make([]byte, 8192)
 			runtime.Stack(buf, true)
 			err = fmt.Errorf("recover: %v Stack:%v", e, string(buf))
 		}
@@ -533,7 +534,7 @@ func (packet *SnmpPacket) marshalMsg() ([]byte, error) {
 		}
 	} else {
 		// community
-		buf.Write([]byte{4, uint8(len(packet.Community))})
+		buf.Write([]byte{4, uint8(len(packet.Community))}) // nolint:gosec
 		buf.WriteString(packet.Community)
 		// pdu
 		pdu, err2 := packet.marshalPDU()
@@ -985,7 +986,7 @@ func (x *GoSNMP) unmarshalVersionFromHeader(packet []byte, response *SnmpPacket)
 
 	if version, ok := rawVersion.(int); ok {
 		x.Logger.Printf("Parsed version %d", version)
-		return SnmpVersion(version), cursor, nil
+		return SnmpVersion(version), cursor, nil // nolint:gosec
 	}
 	return 0, cursor, err
 }
@@ -1081,7 +1082,7 @@ func (x *GoSNMP) unmarshalResponse(packet []byte, response *SnmpPacket) error {
 	}
 
 	if requestid, ok := rawRequestID.(int); ok {
-		response.RequestID = uint32(requestid)
+		response.RequestID = uint32(requestid) // nolint:gosec
 		x.Logger.Printf("requestID: %d", response.RequestID)
 	}
 
@@ -1111,7 +1112,7 @@ func (x *GoSNMP) unmarshalResponse(packet []byte, response *SnmpPacket) error {
 		}
 
 		if maxRepetitions, ok := rawMaxRepetitions.(int); ok {
-			response.MaxRepetitions = uint32(maxRepetitions & 0x7FFFFFFF)
+			response.MaxRepetitions = uint32(maxRepetitions & 0x7FFFFFFF) // nolint:gosec
 		}
 	} else {
 		// Parse Error-Status
@@ -1125,7 +1126,7 @@ func (x *GoSNMP) unmarshalResponse(packet []byte, response *SnmpPacket) error {
 		}
 
 		if errorStatus, ok := rawError.(int); ok {
-			response.Error = SNMPError(errorStatus)
+			response.Error = SNMPError(errorStatus) // nolint:gosec
 			x.Logger.Printf("errorStatus: %d", uint8(errorStatus))
 		}
 
@@ -1140,7 +1141,7 @@ func (x *GoSNMP) unmarshalResponse(packet []byte, response *SnmpPacket) error {
 		}
 
 		if errorindex, ok := rawErrorIndex.(int); ok {
-			response.ErrorIndex = uint8(errorindex)
+			response.ErrorIndex = uint8(errorindex) // nolint:gosec
 			x.Logger.Printf("error-index: %d", uint8(errorindex))
 		}
 	}

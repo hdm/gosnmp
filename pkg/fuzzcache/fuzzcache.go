@@ -82,7 +82,7 @@ func SaveFuzzInputsToCache(cacheDir, funcName string, inputs [][]byte) error {
 	sort.Strings(uvals)
 
 	for _, input := range uvals {
-		_, err := fd.WriteString(fmt.Sprintf("%q\n", input))
+		_, err := fmt.Fprintf(fd, "%q\n", input)
 		if err != nil {
 			return fmt.Errorf("failed to write to cache file %s: %v", dstFile, err)
 		}

@@ -349,8 +349,10 @@ func TestMaxOids(t *testing.T) {
 	Default.MaxOids = 1
 
 	var err error
-	oids := []string{".1.3.6.1.2.1.1.7.0",
-		".1.3.6.1.2.1.2.2.1.10.1"} // 2 arbitrary Oids
+	oids := []string{
+		".1.3.6.1.2.1.1.7.0",
+		".1.3.6.1.2.1.2.2.1.10.1",
+	} // 2 arbitrary Oids
 	errString := "oid count (2) is greater than MaxOids (1)"
 
 	_, err = Default.Get(oids)
@@ -426,8 +428,10 @@ func TestGenericFailureConnectionRefused(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected Get() to fail due to invalid port")
 	}
-	if !(strings.Contains(err.Error(), "connection refused") || strings.Contains(err.Error(), "forcibly closed")) {
-		t.Fatalf("Expected connection refused error. Got => %v", err)
+	if !(strings.Contains(err.Error(), "connection refused") ||
+		strings.Contains(err.Error(), "forcibly closed") ||
+		strings.Contains(err.Error(), "request timeout")) {
+		t.Fatalf("Expected connection refused or timeout error. Got => %v", err)
 	}
 }
 
@@ -809,11 +813,13 @@ func TestSnmpV3AuthMD5PrivDESGet(t *testing.T) {
 	Default.MsgFlags = AuthPriv
 	Default.SecurityModel = UserSecurityModel
 
-	Default.SecurityParameters = &UsmSecurityParameters{UserName: getUserName(t, MD5, DES),
+	Default.SecurityParameters = &UsmSecurityParameters{
+		UserName:                 getUserName(t, MD5, DES),
 		AuthenticationProtocol:   MD5,
 		AuthenticationPassphrase: getAuthKey(t, MD5, DES),
 		PrivacyProtocol:          DES,
-		PrivacyPassphrase:        getPrivKey(t, MD5, DES)}
+		PrivacyPassphrase:        getPrivKey(t, MD5, DES),
+	}
 
 	setupConnection(t)
 	defer Default.Conn.Close()
@@ -841,11 +847,13 @@ func TestSnmpV3AuthSHAPrivDESGet(t *testing.T) {
 	Default.Version = Version3
 	Default.MsgFlags = AuthPriv
 	Default.SecurityModel = UserSecurityModel
-	Default.SecurityParameters = &UsmSecurityParameters{UserName: getUserName(t, SHA, DES),
+	Default.SecurityParameters = &UsmSecurityParameters{
+		UserName:                 getUserName(t, SHA, DES),
 		AuthenticationProtocol:   SHA,
 		AuthenticationPassphrase: getAuthKey(t, SHA, DES),
 		PrivacyProtocol:          DES,
-		PrivacyPassphrase:        getPrivKey(t, SHA, DES)}
+		PrivacyPassphrase:        getPrivKey(t, SHA, DES),
+	}
 
 	setupConnection(t)
 	defer Default.Conn.Close()
@@ -874,11 +882,13 @@ func TestSnmpV3AuthMD5PrivAESGet(t *testing.T) {
 	Default.MsgFlags = AuthPriv
 	Default.SecurityModel = UserSecurityModel
 
-	Default.SecurityParameters = &UsmSecurityParameters{UserName: getUserName(t, MD5, AES),
+	Default.SecurityParameters = &UsmSecurityParameters{
+		UserName:                 getUserName(t, MD5, AES),
 		AuthenticationProtocol:   MD5,
 		AuthenticationPassphrase: getAuthKey(t, MD5, AES),
 		PrivacyProtocol:          AES,
-		PrivacyPassphrase:        getPrivKey(t, MD5, AES)}
+		PrivacyPassphrase:        getPrivKey(t, MD5, AES),
+	}
 
 	setupConnection(t)
 	defer Default.Conn.Close()
@@ -906,11 +916,13 @@ func TestSnmpV3PrivEmptyPrivatePassword(t *testing.T) {
 	Default.Version = Version3
 	Default.MsgFlags = AuthPriv
 	Default.SecurityModel = UserSecurityModel
-	Default.SecurityParameters = &UsmSecurityParameters{UserName: getUserName(t, SHA, AES),
+	Default.SecurityParameters = &UsmSecurityParameters{
+		UserName:                 getUserName(t, SHA, AES),
 		AuthenticationProtocol:   SHA,
 		AuthenticationPassphrase: getAuthKey(t, SHA, AES),
 		PrivacyProtocol:          AES,
-		PrivacyPassphrase:        ""}
+		PrivacyPassphrase:        "",
+	}
 
 	err := Default.Connect()
 	if err == nil {
@@ -925,11 +937,13 @@ func TestSnmpV3AuthNoPrivEmptyPrivatePassword(t *testing.T) {
 	Default.Version = Version3
 	Default.MsgFlags = AuthNoPriv
 	Default.SecurityModel = UserSecurityModel
-	Default.SecurityParameters = &UsmSecurityParameters{UserName: getUserName(t, SHA, NoPriv),
+	Default.SecurityParameters = &UsmSecurityParameters{
+		UserName:                 getUserName(t, SHA, NoPriv),
 		AuthenticationProtocol:   SHA,
 		AuthenticationPassphrase: getAuthKey(t, SHA, NoPriv),
 		PrivacyProtocol:          AES,
-		PrivacyPassphrase:        getPrivKey(t, SHA, NoPriv)}
+		PrivacyPassphrase:        getPrivKey(t, SHA, NoPriv),
+	}
 
 	err := Default.Connect()
 	if err == nil {

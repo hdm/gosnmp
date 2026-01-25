@@ -42,7 +42,7 @@ for file in ${files}; do
                  (( counter += 1 ))
                 echo -e "\nFuzzing ${func} in ${file} (${counter} of ${testCount})"
                 parentDir=$(dirname "$file")
-                go test -fuzz="$func" -v -fuzztime="${fuzzTime}" -test.fuzzcachedir "./testdata/gofuzzcache" "$parentDir"
+                go test -fuzz="$func" -v -tags all -fuzztime="${fuzzTime}" -test.fuzzcachedir "./testdata/gofuzzcache" "$parentDir"
         done
 done
 
@@ -61,7 +61,7 @@ if [ "$(uname -s)" == "Linux" ]; then
                      (( counter += 1 ))
                     echo -e "\n32-bit fuzzing ${func} in ${file} (${counter} of ${testCount})"
                     parentDir=$(dirname "$file")
-                    GOARCH=386 go test -v -fuzz="$func" -fuzztime="${fuzzTime}" "$parentDir"
+                    GOARCH=386 go test -v -tags all -fuzz="$func" -fuzztime="${fuzzTime}" "$parentDir"
             done
         done
 

@@ -1,4 +1,4 @@
-module github.com/gosnmp/gosnmp
+module github.com/runZeroInc/gosnmp
 
 go 1.24.0
 
@@ -11,6 +11,8 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/klauspost/compress v1.18.3 // indirect
+	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect

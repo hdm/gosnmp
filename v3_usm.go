@@ -257,6 +257,13 @@ func (sp *UsmSecurityParameters) Log() {
 	sp.Logger.Printf("SECURITY PARAMETERS:%s", sp.SafeString())
 }
 
+// GetInauthentic returns whether any message processed with these security parameters was inauthentic and why
+func (sp *UsmSecurityParameters) GetInauthentic() (bool, string) {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	return sp.Inauthentic, sp.InauthenticReason
+}
+
 // Copy method for UsmSecurityParameters used to copy a SnmpV3SecurityParameters without knowing it's implementation
 func (sp *UsmSecurityParameters) Copy() SnmpV3SecurityParameters {
 	sp.mu.Lock()

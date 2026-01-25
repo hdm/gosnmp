@@ -433,7 +433,6 @@ var testsInvalidSNMPResponses = []string{
 }
 
 func TestInvalidSNMPResponses(t *testing.T) {
-
 	g := &GoSNMP{
 		Target:    "127.0.0.1",
 		Port:      161,
@@ -451,7 +450,6 @@ func TestInvalidSNMPResponses(t *testing.T) {
 }
 
 func checkByteEquality2(a, b []byte) bool {
-
 	if a == nil && b == nil {
 		return true
 	}

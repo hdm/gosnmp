@@ -47,6 +47,7 @@ type SnmpV3SecurityParameters interface {
 	SafeString() string
 	InitPacket(packet *SnmpPacket) error
 	InitSecurityKeys() error
+	GetInauthentic() (bool, string)
 	validate(flags SnmpV3MsgFlags) error
 	init(log Logger) error
 	discoveryRequired() *SnmpPacket
@@ -79,7 +80,7 @@ func (x *GoSNMP) validateParametersV3() error {
 func (packet *SnmpPacket) authenticate(msg []byte) ([]byte, error) {
 	defer func() {
 		if e := recover(); e != nil {
-			var buf = make([]byte, 8192)
+			buf := make([]byte, 8192)
 			runtime.Stack(buf, true)
 			fmt.Printf("[v3::authenticate]recover: %v. Stack=%v\n", e, string(buf))
 		}
@@ -161,7 +162,6 @@ func (x *GoSNMP) negotiateInitialSecurityParameters(packetOut *SnmpPacket) error
 	if discoveryPacket := packetOut.SecurityParameters.discoveryRequired(); discoveryPacket != nil {
 		discoveryPacket.ContextName = x.ContextName
 		result, err := x.sendOneRequest(discoveryPacket, true)
-
 		if err != nil {
 			return err
 		}
@@ -354,7 +354,8 @@ func (packet *SnmpPacket) prepareV3ScopedPDU() ([]byte, error) {
 
 func (x *GoSNMP) unmarshalV3Header(packet []byte,
 	cursor int,
-	response *SnmpPacket) (int, error) {
+	response *SnmpPacket,
+) (int, error) {
 	if PDUType(packet[cursor]) != Sequence {
 		return 0, fmt.Errorf("invalid SNMPV3 Header")
 	}
@@ -450,7 +451,7 @@ func (x *GoSNMP) unmarshalV3Header(packet []byte,
 
 func (x *GoSNMP) decryptPacket(packet []byte, cursor int, response *SnmpPacket) ([]byte, int, error) {
 	var err error
-	var decrypted = false
+	decrypted := false
 
 	if cursor >= len(packet) {
 		return nil, 0, errors.New("error parsing SNMPV3: truncated packet")

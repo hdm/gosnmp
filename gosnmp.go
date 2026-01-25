@@ -200,9 +200,11 @@ type SnmpPDU struct {
 	Type Asn1BER
 }
 
-const AsnContext = 0x80
-const AsnExtensionID = 0x1F
-const AsnExtensionTag = (AsnContext | AsnExtensionID) // 0x9F
+const (
+	AsnContext      = 0x80
+	AsnExtensionID  = 0x1F
+	AsnExtensionTag = (AsnContext | AsnExtensionID) // 0x9F
+)
 
 //go:generate stringer -type Asn1BER
 

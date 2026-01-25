@@ -76,3 +76,6 @@ gosnmp.html
 cpu.out
 mem.out
 gosnmp.test
+
+# go fuzz cache
+testdata/gofuzzcache

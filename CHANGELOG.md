@@ -7,7 +7,8 @@
 
 # v1.X.0
 
-* [ENHANCEMENT] USM now accepts AllowInauthentic to accept invalid signatures on responses
+* [ENHANCEMENT] USM now accepts AcceptInauthentic to allow invalid signatures or mismatched usernames on responses
+* [ENHANCEMENT] GoSNMP instances now provide GetInauthentic() to return whether any inauthentic response was seen and the last verification failure reason 
 
 
 ## v1.38.0

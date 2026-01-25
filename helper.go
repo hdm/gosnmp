@@ -662,8 +662,8 @@ func parseLength(bytes []byte) (int, int, error) {
 		for i := range numOctets {
 			length <<= 8
 			if len(bytes) < 2+i+1 {
-				// Invalid data detected, return an error
-				return 0, 0, ErrInvalidPacketLength
+				// Invalid data, return something safe-ish
+				return len(bytes), len(bytes), ErrInvalidPacketLength // TODO: Revisit error
 			}
 			length += int(bytes[2+i])
 			if length < 0 {
@@ -818,7 +818,7 @@ func parseUint32(bytes []byte) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	return uint32(ret), nil //nolint:gosec
+	return uint32(ret), nil
 }
 
 // parseUint treats the given bytes as a big-endian, signed integer and returns
@@ -831,7 +831,7 @@ func parseUint(bytes []byte) (uint, error) {
 	if ret64 != uint64(uint(ret64)) {
 		return 0, ErrIntegerTooLarge
 	}
-	return uint(ret64), nil
+	return uint(ret64), nil //nolint:gosec
 }
 
 func parseFloat32(bytes []byte) (float32, error) {

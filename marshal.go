@@ -1098,7 +1098,7 @@ func (x *GoSNMP) unmarshalResponse(packet []byte, response *SnmpPacket) error {
 		}
 
 		if nonRepeaters, ok := rawNonRepeaters.(int); ok {
-			response.NonRepeaters = uint8(nonRepeaters)
+			response.NonRepeaters = uint8(nonRepeaters) //nolint:gosec
 		}
 
 		// Parse Max Repetitions

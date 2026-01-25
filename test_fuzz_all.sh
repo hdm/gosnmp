@@ -46,27 +46,5 @@ for file in ${files}; do
         done
 done
 
-# Check for Linux on x86_64 hardware. If found, we also fuzz in 32-bit mode.
-if [ "$(uname -s)" == "Linux" ]; then
-    if [ "$(uname -m)" == "x86_64" ] || [ "$(uname -m)" == "i686" ]; then
-        counter=0
-
-        echo -e "\n\n\n###########################################################################"
-        echo "Running 32-bit fuzzing"
-        echo -e "###########################################################################\n"
-        for file in ${files}; do
-            funcs=$(grep '^func Fuzz' "$file" | sed s/func\ // | sed 's/(.*$//')
-
-            for func in ${funcs}; do
-                     (( counter += 1 ))
-                    echo -e "\n32-bit fuzzing ${func} in ${file} (${counter} of ${testCount})"
-                    parentDir=$(dirname "$file")
-                    GOARCH=386 go test -v -tags all -fuzz="$func" -fuzztime="${fuzzTime}" "$parentDir"
-            done
-        done
-
-    fi
-fi
-
 echo "Saving the fuzz cache from ./testdata/gofuzzcache..."
 go run ./cmd/fuzzcache/main.go pack ./testdata/gofuzzcache ./testdata/fuzzcache

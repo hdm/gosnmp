@@ -393,10 +393,19 @@ sendRetry:
 			// immediately re-marshal and resend once within the same attempt.
 			// Other REPORT OIDs are returned as errors.
 			if result.Version == Version3 && result.PDUType == Report && len(result.Variables) == 1 {
-				// Adopt authoritative params from the REPORT into the session USM
-				if errSP := x.storeSecurityParameters(result); errSP != nil {
-					x.Logger.Printf("SNMPv3: storeSecurityParameters failed: %v", errSP)
-					return result, errSP
+				if result.SecurityParameters != nil {
+					xsp, xok := result.SecurityParameters.(*UsmSecurityParameters)
+					psp, pok := result.SecurityParameters.(*UsmSecurityParameters)
+					if xok && pok && xsp.UserName == psp.UserName {
+						// Adopt authoritative params from the REPORT into the session USM only if the username is the same
+						x.Logger.Printf("SNMPv3: adopting authoritative engine params from REPORT: %s", result.SecurityParameters.SafeString())
+						if errSP := x.storeSecurityParameters(result); errSP != nil {
+							x.Logger.Printf("SNMPv3: storeSecurityParameters failed: %v", errSP)
+							return result, errSP
+						}
+					} else if xok && pok {
+						x.Logger.Printf("SNMPv3: not adopting authoritative engine params from REPORT due to username mismatch. Report SP: %s, Session SP: %s", result.SecurityParameters.SafeString(), x.SecurityParameters.SafeString())
+					}
 				}
 
 				switch oid := result.Variables[0].Name; oid {

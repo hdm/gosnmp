@@ -4,7 +4,7 @@ version: 2.1
 executors:
   golang:
     docker:
-    - image: cimg/go:1.25
+    - image: cimg/go:1.26
 
 jobs:
   generate:
@@ -21,6 +21,7 @@ jobs:
     steps:
     - checkout
     - run: make lint
+    - run: make -C netsnmp lint
 
   fuzz:
     executor: golang
@@ -64,6 +65,14 @@ jobs:
        else
          echo "Not running -race"
        fi
+    - run: make -C netsnmp test
+    - run: |
+       if [[ "${GOARCH}" == "amd64" ]]; then
+         sudo apt-get -y install libsnmp-dev
+         make -C netsnmp test_netsnmp
+       else
+         echo "Not running net-snmp tests"
+       fi
 
 workflows:
   version: 2
@@ -81,3 +90,4 @@ workflows:
             goversion:
             - "1.24"
             - "1.25"
+            - "1.26"

@@ -34,7 +34,6 @@ linters:
       enable:
         - shadow
   exclusions:
-    generated: lax
     presets:
       - comments
       - common-false-positives
@@ -51,5 +50,3 @@ formatters:
   settings:
     gofmt:
       simplify: true
-  exclusions:
-    generated: lax
